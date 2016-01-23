@@ -7,9 +7,9 @@ from collections import namedtuple
 
 ###################
 
-__BuildDurationStat = namedtuple("BuildDurationStat", "build_id build_configuration_id duration")
+__BuildStat = namedtuple("BuildStat", "build_id build_configuration_id duration")
 
-class BuildDurationStat(__BuildDurationStat):
+class BuildStat(__BuildStat):
     """DTO for a build step:
    stat.build_id
    stat.build_configuration_id # traditionally called buildTypeId in TeamCity
@@ -70,7 +70,7 @@ class BuildChainStatsGatherer():
         return [self.total_build_duration_for_chain(build_id) for build_id in self.__successful_build_ids_of_configuration(build_configuration_id)]
 
     def build_stats_for_chain(self, build_chain_id):
-        """Returns a list of BuildStat tuples for all elements in the build chain.
+        """Returns a list of Build tuples for all elements in the build chain.
 
         This method allows insight into the runtime of each configuratio inside the build chain.
         """
