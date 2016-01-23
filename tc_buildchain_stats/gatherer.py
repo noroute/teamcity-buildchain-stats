@@ -1,8 +1,11 @@
 #!/usr/bin/env python
 
 import requests, json
+from collections import namedtuple
 
 ###################
+
+BuildStat = namedtuple("BuildStat", "build_id build_configuration_id duration")
 
 class BuildChainStatsGatherer():
 
@@ -31,10 +34,18 @@ class BuildChainStatsGatherer():
 
     def __build_duration_for_id(self, build_id):
         json_form = self.__retrieve_as_json(self.statistics_path % build_id)
-        return [v[u'value'] for v in json_form[u'property'] if (v[u'name'] == u'BuildDuration')][0]
+        return self.__get_statistics_property_values(json_form, 'BuildDuration')[0]
+
+    def __get_statistics_property_values(self, json_form, property_name):
+        return [v[u'value'] for v in json_form[u'property'] if (v[u'name'] == property_name)]
 
     def total_build_duration_for_chain(self, build_chain_id):
         return sum([int(self.__build_duration_for_id(id)) for id in self.__build_ids_of_chain(build_chain_id)])
 
     def all_successful_build_chain_times(self, build_configuration_id):
         return [self.total_build_duration_for_chain(build_id) for build_id in self.__successful_build_ids_of_configuration(build_configuration_id)]
+
+    def build_stats_for_chain(self, build_chain_id):
+        json_form = self.__retrieve_as_json(self.build_chain_path % build_chain_id)
+        builds = [{'build_id': build[u'id'], 'configuration_id': build[u'buildTypeId']} for build in json_form[u'build']]
+        return [BuildStat(build['build_id'], build['configuration_id'], self.__build_duration_for_id(build['build_id'])) for build in builds]

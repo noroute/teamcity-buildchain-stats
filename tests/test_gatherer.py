@@ -50,3 +50,22 @@ def test_all_successful_build_chain_times_for_two_successful_build_chains():
     httpretty.register_uri(httpretty.GET, gatherer.statistics_path % 21, body='{"property": [{"name": "BuildDuration", "value": 89}]}')
 
     assert gatherer.all_successful_build_chain_times('configuration_id') == [130, 26]
+
+@httpretty.activate
+def test_build_times_for_chain_returns_one_BuildStat_with_values():
+    gatherer = BuildChainStatsGatherer("http://foo", "username", "password")
+
+    httpretty.register_uri(httpretty.GET, gatherer.build_chain_path % 1, body='{"build": [{"id": 10, "buildTypeId": "configuration_id"}]}')
+    httpretty.register_uri(httpretty.GET, gatherer.statistics_path % 10, body='{"property": [{"name": "BuildDuration", "value": 7}]}')
+
+    assert gatherer.build_stats_for_chain(1) == [BuildStat(10, 'configuration_id', 7)]
+
+@httpretty.activate
+def test_build_times_for_chain_returns_list_with_two_BuildStats_on_two_step_chain():
+    gatherer = BuildChainStatsGatherer("http://foo", "username", "password")
+
+    httpretty.register_uri(httpretty.GET, gatherer.build_chain_path % 1, body='{"build": [{"id": 10, "buildTypeId": "configuration_id"},{"id": 11, "buildTypeId": "another_configuration_id"}]}')
+    httpretty.register_uri(httpretty.GET, gatherer.statistics_path % 10, body='{"property": [{"name": "BuildDuration", "value": 7}]}')
+    httpretty.register_uri(httpretty.GET, gatherer.statistics_path % 11, body='{"property": [{"name": "BuildDuration", "value": 34}]}')
+
+    assert gatherer.build_stats_for_chain(1) == [BuildStat(10, 'configuration_id', 7), BuildStat(11, 'another_configuration_id', 34)]
