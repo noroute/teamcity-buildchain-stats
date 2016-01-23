@@ -17,3 +17,10 @@ TeamCity to retrieve runtime statistics.
 **WARNING**: The library is in an early alpha stage and interfaces are
 undocumented and may change at will. I hope to be able to provide a
 1.0 version with API stability, soon.
+
+API Examples
+
+    >>> from tc_buildchain_stats.gatherer import BuildChainStatsGatherer
+
+    >>> gatherer = BuildChainStatsGatherer("https://your.teamcity.instance", "user", "pass")
+    >>> gatherer.total_build_duration_for_chain(12345) # toal duration in seconds
