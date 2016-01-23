@@ -4,7 +4,7 @@ teamcity-buildchain-stats
 ![Build Status](https://travis-ci.org/noroute/teamcity-buildchain-stats.svg?branch=master)
 
 `teamcity-buildchain-stats` is a Python 2.6/2.7 library that provides
-access to [TeamCity](https://www.jetbrains.com/teamcity/) 8 and 9
+access to [TeamCity](https://www.jetbrains.com/teamcity/) 9.1+
 build chain runtime statistics.
 
 Build chains have been a building block for TeamCity for a while now
