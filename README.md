@@ -1,6 +1,7 @@
-= teamcity-buildchain-stats
+teamcity-buildchain-stats
+=========================
 
-[![Build Status](https://travis-ci.org/noroute/teamcity-buildchain-stats.svg?branch=master)
+[Build Status](https://travis-ci.org/noroute/teamcity-buildchain-stats.svg?branch=master)
 
 `teamcity-buildchain-stats` is a Python 2.6/2.7 library that provides
 access to [TeamCity](https://www.jetbrains.com/teamcity/) 8 and 9
