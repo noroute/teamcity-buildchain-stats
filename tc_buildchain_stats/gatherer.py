@@ -8,12 +8,20 @@ from collections import namedtuple
 ###################
 
 __BuildStat = namedtuple("BuildStat", "build_id build_configuration_id duration")
+__BuildChain = namedtuple("BuildChain", "build_chain_id build_stats")
 
 class BuildStat(__BuildStat):
     """DTO for a build step:
    stat.build_id
    stat.build_configuration_id # traditionally called buildTypeId in TeamCity
    stat.duration               # from the BuildDuration field in the REST interface
+    """
+    pass
+
+class BuildChain(__BuildChain):
+    """DTO for a build chain:
+   chain.build_chain_id
+   stat.build_stats # list of BuildStats that belongs to the chain
     """
     pass
 
@@ -66,8 +74,8 @@ class BuildChainStatsGatherer():
         """Returns the total duration for one specific build chain run"""
         return sum([int(self.__build_duration_for_id(id)) for id in self.__build_ids_of_chain(build_chain_id)])
 
-    def all_successful_build_chain_times(self, build_configuration_id):
-        return [self.total_build_duration_for_chain(build_id) for build_id in self.__successful_build_ids_of_configuration(build_configuration_id)]
+    def all_successful_build_chain_stats(self, build_configuration_id):
+        return [BuildChain(build_chain_id, self.build_stats_for_chain(build_chain_id)) for build_chain_id in self.__successful_build_ids_of_configuration(build_configuration_id)]
 
     def build_stats_for_chain(self, build_chain_id):
         """Returns a list of Build tuples for all elements in the build chain.
@@ -76,4 +84,5 @@ class BuildChainStatsGatherer():
         """
         json_form = self.__retrieve_as_json(self.build_chain_path % build_chain_id)
         builds = [{'build_id': build[u'id'], 'configuration_id': build[u'buildTypeId']} for build in json_form[u'build']]
+
         return [BuildStat(build['build_id'], build['configuration_id'], self.__build_duration_for_id(build['build_id'])) for build in builds]
