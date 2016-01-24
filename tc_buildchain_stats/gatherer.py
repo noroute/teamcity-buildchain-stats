@@ -54,7 +54,7 @@ class BuildChainStatsGatherer():
     def __retrieve_as_json(self, url):
         return self.session.get(url).json()
 
-    def __successful_build_ids_of_configuration(self, configuration_id):
+    def __successful_build_chain_ids_of_configuration(self, configuration_id):
         builds = self.__retrieve_as_json(self.builds_of_a_configuration_path % configuration_id)
         successful_ids = [build[u'id'] for build in builds[u'build'] if (build[u'status'] == u'SUCCESS')]
         return successful_ids
@@ -75,7 +75,7 @@ class BuildChainStatsGatherer():
         return sum([int(self.__build_duration_for_id(id)) for id in self.__build_ids_of_chain(build_chain_id)])
 
     def all_successful_build_chain_stats(self, build_configuration_id):
-        return [BuildChain(build_chain_id, self.build_stats_for_chain(build_chain_id)) for build_chain_id in self.__successful_build_ids_of_configuration(build_configuration_id)]
+        return [BuildChain(build_chain_id, self.build_stats_for_chain(build_chain_id)) for build_chain_id in self.__successful_build_chain_ids_of_configuration(build_configuration_id)]
 
     def build_stats_for_chain(self, build_chain_id):
         """Returns a list of Build tuples for all elements in the build chain.
