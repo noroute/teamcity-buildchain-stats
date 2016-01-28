@@ -3,11 +3,12 @@
 """A TeamCity >= 9.1 build chain runtime stats gatherer"""
 
 import requests, json
+import dateutil.parser
 from collections import namedtuple
 
 ###################
 
-__BuildStat = namedtuple("BuildStat", "build_id build_configuration_id duration")
+__BuildStat = namedtuple("BuildStat", "build_id build_configuration_id duration start_date")
 __BuildChain = namedtuple("BuildChain", "build_chain_id build_stats")
 
 class BuildStat(__BuildStat):
@@ -15,6 +16,7 @@ class BuildStat(__BuildStat):
    stat.build_id
    stat.build_configuration_id # traditionally called buildTypeId in TeamCity
    stat.duration               # from the BuildDuration field in the REST interface
+   stat.start_date             # start of build
     """
     pass
 
@@ -48,6 +50,7 @@ class BuildChainStatsGatherer():
 
         self.rest_base = self.base_url + "/httpAuth/app/rest"
         self.statistics_path = self.rest_base + "/builds/id:%i/statistics/"
+        self.builds_path = self.rest_base + "/builds/id:%i"
         self.builds_of_a_configuration_path = self.rest_base + "/buildTypes/id:%s/builds/"
         self.build_chain_path = self.rest_base + "/builds?locator=snapshotDependency:(to:(id:%i),includeInitial:true),defaultFilter:false"
 
@@ -67,6 +70,10 @@ class BuildChainStatsGatherer():
         json_form = self.__retrieve_as_json(self.statistics_path % build_id)
         return self.__get_statistics_property_values(json_form, 'BuildDuration')[0]
 
+    def __build_start_date_for_id(self, build_id):
+        json_form = self.__retrieve_as_json(self.builds_path % build_id)
+        return dateutil.parser.parse(json_form[u'startDate'])
+
     def __get_statistics_property_values(self, json_form, property_name):
         return [v[u'value'] for v in json_form[u'property'] if (v[u'name'] == property_name)]
 
@@ -85,4 +92,4 @@ class BuildChainStatsGatherer():
         json_form = self.__retrieve_as_json(self.build_chain_path % build_chain_id)
         builds = [{'build_id': build[u'id'], 'configuration_id': build[u'buildTypeId']} for build in json_form[u'build']]
 
-        return [BuildStat(build['build_id'], build['configuration_id'], self.__build_duration_for_id(build['build_id'])) for build in builds]
+        return [BuildStat(build['build_id'], build['configuration_id'], self.__build_duration_for_id(build['build_id']), self.__build_start_date_for_id(build['build_id'])) for build in builds]
