@@ -25,6 +25,15 @@ def given_a_build_chain(chain_id, builds):
         httpretty.register_uri(GET, stats_gatherer().builds_path % build.build_id, body='{"id": %i, "startDate": "%s"}' % (build.build_id, build.start_date))
         httpretty.register_uri(GET, stats_gatherer().statistics_path % build.build_id, body='{"property": [{"name": "BuildDuration", "value": %i }]}' % build.duration)
 
+# We need these two helpers because httpretty supports Query params only throw callbacks!
+build_chain_id_in_request = lambda q : re.search("snapshotDependency:\(to:\(id:(\d+)\)", str(q['locator'])).group(1)
+
+def build_chain_path_callback(request, uri, headers):
+        build_chain_id = int(build_chain_id_in_request(request.querystring))
+        return (200, headers, '{"build": [{"id": %(id)i1, "buildTypeId": "build_configuration%(id)i1"},{"id": %(id)i2, "buildTypeId": "build_configuration%(id)i2"}]}' % {'id' : build_chain_id})
+
+### TESTS ###
+
 def test_total_build_duration_for_chain_returns_times_for_one_build(http_mock, stats_gatherer):
     given_a_build_chain(5, [BuildStat(1, None, 111, None)])
 
@@ -46,21 +55,13 @@ def test_all_successful_build_chain_stats_for_one_successful_build_chain(http_mo
                                                                                               [BuildStat(1, 'build_configuration1', 111, datetime_fixture),
                                                                                                BuildStat(2, 'build_configuration2', 346, datetime_fixture)])]
 
-@httpretty.activate
-def test_all_successful_build_chain_stats_for_two_successful_build_chains():
-    stats_gatherer = BuildChainStatsGatherer("http://foo", "username", "password")
-    httpretty.register_uri(GET, stats_gatherer.builds_of_a_configuration_path  % 'configuration_id', body='{"build": [{"id": 1, "status": "SUCCESS"},{"id": 2, "status": "SUCCESS"}]}')
-
-    build_chain_id_in_request = lambda q : re.search("snapshotDependency:\(to:\(id:(\d+)\)", str(q['locator'])).group(1)
-    def build_chain_path_callback(request, uri, headers):
-        build_chain_id = int(build_chain_id_in_request(request.querystring))
-        return (200, headers, '{"build": [{"id": %(id)i1, "buildTypeId": "build_configuration%(id)i1"},{"id": %(id)i2, "buildTypeId": "build_configuration%(id)i2"}]}' % {'id' : build_chain_id})
-
+def test_all_successful_build_chain_stats_for_two_successful_build_chains(http_mock, stats_gatherer):
     given_a_build_chain(1,[BuildStat(11, "build_configuration11", 11, date_fixture),
                            BuildStat(12, "build_configuration12", 12, date_fixture)])
     given_a_build_chain(2,[BuildStat(21, "build_configuration21", 21, date_fixture),
                            BuildStat(22, "build_configuration22", 22, date_fixture)])
 
+    httpretty.register_uri(GET, stats_gatherer.builds_of_a_configuration_path  % 'configuration_id', body='{"build": [{"id": 1, "status": "SUCCESS"},{"id": 2, "status": "SUCCESS"}]}')
     httpretty.register_uri(GET, stats_gatherer.build_chain_path % 1, body=build_chain_path_callback)
 
     assert stats_gatherer.all_successful_build_chain_stats('configuration_id') == [
