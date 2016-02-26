@@ -4,6 +4,7 @@ from collections import namedtuple
 from httpretty import GET
 
 date_fixture = "20160127T160502+0100"
+date_fixture_one_hour_later = "20160127T170502+0100"
 datetime_fixture = dateutil.parser.parse(date_fixture)
 
 # Need a pytest fixture to enable httpretty since @httpretty.activate cannot deal with test method arguments
@@ -83,3 +84,14 @@ def test_build_times_for_chain_returns_list_with_two_BuildStats_on_two_step_chai
 
     assert stats_gatherer.build_stats_for_chain(1) == [BuildStat(10, 'configuration_id', 7, datetime_fixture),
                                                        BuildStat(11, 'another_configuration_id', 34, datetime_fixture)]
+
+def test_build_cycle_time(http_mock, stats_gatherer):
+    build_id = 1
+    start_date = date_fixture
+    queued_date = date_fixture
+    build_configuration = "build_configuration"
+    finish_date = date_fixture_one_hour_later
+
+    httpretty.register_uri(GET, stats_gatherer.builds_path % build_id, body='{"id": %i, "buildTypeId": "%s", "startDate": "%s", "queuedDate": "%s", "finishDate": "%s"}' % (build_id, build_configuration, start_date, queued_date, finish_date))
+
+    assert stats_gatherer.build_cycle_time(build_id) == BuildCycleTime(build_id, build_configuration, datetime_fixture, 3600)

@@ -10,6 +10,7 @@ from collections import namedtuple
 
 __BuildStat = namedtuple("BuildStat", "build_id build_configuration_id duration start_date")
 __BuildChain = namedtuple("BuildChain", "build_chain_id build_stats")
+__BuildCycleTime = namedtuple("BuildCycleTime", "build_id build_configuration start_date cycle_time")
 
 class BuildStat(__BuildStat):
     """DTO for a build step:
@@ -26,6 +27,18 @@ class BuildChain(__BuildChain):
    stat.build_stats # list of BuildStats that belongs to the chain
     """
     pass
+
+class BuildCycleTime(__BuildCycleTime):
+    """DTO for build cycle times (difference between queue time and finish):
+    bct.build_id
+    bct.build_configuration
+    bct.start_date # start of build
+    bct.cycle_time # difference between queue time and finish in seconds
+    """
+    pass
+
+def as_date(json_dict, field_name):
+    return dateutil.parser.parse(json_dict[field_name])
 
 class BuildChainStatsGatherer():
 
@@ -72,7 +85,7 @@ class BuildChainStatsGatherer():
 
     def __build_start_date_for_id(self, build_id):
         json_form = self.__retrieve_as_json(self.builds_path % build_id)
-        return dateutil.parser.parse(json_form[u'startDate'])
+        return as_date(json_form, u'startDate')
 
     def __get_statistics_property_values(self, json_form, property_name):
         return [v[u'value'] for v in json_form[u'property'] if (v[u'name'] == property_name)]
@@ -83,6 +96,11 @@ class BuildChainStatsGatherer():
 
     def all_successful_build_chain_stats(self, build_configuration_id):
         return [BuildChain(build_chain_id, self.build_stats_for_chain(build_chain_id)) for build_chain_id in self.__successful_build_chain_ids_of_configuration(build_configuration_id)]
+
+    def build_cycle_time(self, build_id):
+        """Returns a BuildCycleTime object for the given build"""
+        json_form = self.__retrieve_as_json(self.builds_path % build_id)
+        return BuildCycleTime(build_id, json_form[u'buildTypeId'], as_date(json_form, u'startDate'), (as_date(json_form, u'finishDate') - as_date(json_form, u'queuedDate')).seconds)
 
     def build_stats_for_chain(self, build_chain_id):
         """Returns a list of Build tuples for all elements in the build chain.

@@ -15,7 +15,7 @@ here = path.abspath(path.dirname(__file__))
 setup(
     name='tc_buildchain_stats',
 
-    version='0.1',
+    version='0.2',
 
     description='Gather stats of TeamCity build chains',
     long_description='',
