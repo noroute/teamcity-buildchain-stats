@@ -73,6 +73,16 @@ def test_all_successful_build_chain_stats_for_two_successful_build_chains(http_m
                    [BuildStat(21, 'build_configuration21', 21, datetime_fixture),
                     BuildStat(22, 'build_configuration22', 22, datetime_fixture)])]
 
+def test_all_successful_build_chain_ids_for_one_successful_build_chain(http_mock, stats_gatherer):
+    httpretty.register_uri(GET, stats_gatherer.builds_of_a_configuration_path  % 'configuration_id', body='{"build": [{"id": 1, "status": "SUCCESS"},{"id": 2, "status": "FAILURE"}]}')
+
+    assert stats_gatherer.all_successful_build_chain_ids('configuration_id') == [1]
+
+def test_all_successful_build_chain_ids_for_two_successful_build_chains(http_mock, stats_gatherer):
+    httpretty.register_uri(GET, stats_gatherer.builds_of_a_configuration_path  % 'configuration_id', body='{"build": [{"id": 1, "status": "SUCCESS"},{"id": 2, "status": "SUCCESS"}]}')
+
+    assert stats_gatherer.all_successful_build_chain_ids('configuration_id') == [1,2]
+
 def test_build_times_for_chain_returns_one_BuildStat_with_values(http_mock, stats_gatherer):
     given_a_build_chain(1, [BuildStat(10, "configuration_id", 7, date_fixture)])
 

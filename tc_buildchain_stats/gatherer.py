@@ -113,6 +113,13 @@ class BuildChainStatsGatherer():
             ) for build_chain_id in self.__successful_build_chain_ids_of_configuration(build_configuration_id)
         ]
 
+    def all_successful_build_chain_ids(self, build_configuration_id):
+        """Returns the buildIds of all successful build chains for the given build configuration"""
+        return [
+            build_chain_id
+            for build_chain_id in self.__successful_build_chain_ids_of_configuration(build_configuration_id)
+        ]
+
     def build_cycle_time(self, build_id):
         """Returns a BuildCycleTime object for the given build"""
         json_form = self.__retrieve_as_json(self.builds_path % build_id)
