@@ -104,4 +104,4 @@ def test_build_cycle_time(http_mock, stats_gatherer):
 
     httpretty.register_uri(GET, stats_gatherer.builds_path % build_id, body='{"id": %i, "buildTypeId": "%s", "startDate": "%s", "queuedDate": "%s", "finishDate": "%s"}' % (build_id, build_configuration, start_date, queued_date, finish_date))
 
-    assert stats_gatherer.build_cycle_time(build_id) == BuildCycleTime(build_id, build_configuration, datetime_fixture, 3600)
+    assert stats_gatherer.build_cycle_time(build_id) == BuildCycleTime(build_id, build_configuration, datetime_fixture, 3600000)

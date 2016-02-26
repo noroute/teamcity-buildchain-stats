@@ -127,7 +127,7 @@ class BuildChainStatsGatherer():
             build_id,
             json_form[u'buildTypeId'],
             as_date(json_form, u'startDate'),
-            (as_date(json_form, u'finishDate') - as_date(json_form, u'queuedDate')).seconds
+            (as_date(json_form, u'finishDate') - as_date(json_form, u'queuedDate')).seconds * 1000
         )
 
     def build_stats_for_chain(self, build_chain_id):
