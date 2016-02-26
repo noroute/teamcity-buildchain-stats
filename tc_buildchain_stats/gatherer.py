@@ -72,12 +72,17 @@ class BuildChainStatsGatherer():
 
     def __successful_build_chain_ids_of_configuration(self, configuration_id):
         builds = self.__retrieve_as_json(self.builds_of_a_configuration_path % configuration_id)
-        successful_ids = [build[u'id'] for build in builds[u'build'] if (build[u'status'] == u'SUCCESS')]
-        return successful_ids
+        return [
+            build[u'id']
+            for build in builds[u'build'] if (build[u'status'] == u'SUCCESS')
+        ]
 
     def __build_ids_of_chain(self, build_chain_id):
         json_form = self.__retrieve_as_json(self.build_chain_path % build_chain_id)
-        return [build[u'id'] for build in json_form[u'build']]
+        return [
+            build[u'id']
+            for build in json_form[u'build']
+        ]
 
     def __build_duration_for_id(self, build_id):
         json_form = self.__retrieve_as_json(self.statistics_path % build_id)
@@ -88,19 +93,35 @@ class BuildChainStatsGatherer():
         return as_date(json_form, u'startDate')
 
     def __get_statistics_property_values(self, json_form, property_name):
-        return [v[u'value'] for v in json_form[u'property'] if (v[u'name'] == property_name)]
+        return [
+            v[u'value']
+            for v in json_form[u'property'] if (v[u'name'] == property_name)
+        ]
 
     def total_build_duration_for_chain(self, build_chain_id):
         """Returns the total duration for one specific build chain run"""
-        return sum([int(self.__build_duration_for_id(id)) for id in self.__build_ids_of_chain(build_chain_id)])
+        return sum([
+            int(self.__build_duration_for_id(id))
+            for id in self.__build_ids_of_chain(build_chain_id)
+        ])
 
     def all_successful_build_chain_stats(self, build_configuration_id):
-        return [BuildChain(build_chain_id, self.build_stats_for_chain(build_chain_id)) for build_chain_id in self.__successful_build_chain_ids_of_configuration(build_configuration_id)]
+        return [
+            BuildChain(
+                build_chain_id,
+                self.build_stats_for_chain(build_chain_id)
+            ) for build_chain_id in self.__successful_build_chain_ids_of_configuration(build_configuration_id)
+        ]
 
     def build_cycle_time(self, build_id):
         """Returns a BuildCycleTime object for the given build"""
         json_form = self.__retrieve_as_json(self.builds_path % build_id)
-        return BuildCycleTime(build_id, json_form[u'buildTypeId'], as_date(json_form, u'startDate'), (as_date(json_form, u'finishDate') - as_date(json_form, u'queuedDate')).seconds)
+        return BuildCycleTime(
+            build_id,
+            json_form[u'buildTypeId'],
+            as_date(json_form, u'startDate'),
+            (as_date(json_form, u'finishDate') - as_date(json_form, u'queuedDate')).seconds
+        )
 
     def build_stats_for_chain(self, build_chain_id):
         """Returns a list of Build tuples for all elements in the build chain.
@@ -110,4 +131,11 @@ class BuildChainStatsGatherer():
         json_form = self.__retrieve_as_json(self.build_chain_path % build_chain_id)
         builds = [{'build_id': build[u'id'], 'configuration_id': build[u'buildTypeId']} for build in json_form[u'build']]
 
-        return [BuildStat(build['build_id'], build['configuration_id'], self.__build_duration_for_id(build['build_id']), self.__build_start_date_for_id(build['build_id'])) for build in builds]
+        return [
+            BuildStat(
+                build['build_id'],
+                build['configuration_id'],
+                self.__build_duration_for_id(build['build_id']),
+                self.__build_start_date_for_id(build['build_id']))
+            for build in builds
+        ]
